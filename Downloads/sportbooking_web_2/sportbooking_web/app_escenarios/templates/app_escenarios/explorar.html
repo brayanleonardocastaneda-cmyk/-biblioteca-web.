@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block titulo %}Explorar canchas{% endblock %}
+{% block contenido %}
+<section class="hero">
+  <div class="hero-in">
+    <div class="kicker" style="color:var(--green)">Reservas en tiempo real</div>
+    <h1>Encuentra tu cancha y<br>juega hoy mismo.</h1>
+    <p>Escenarios deportivos verificados, disponibilidad al instante y acceso con código QR.</p>
+  </div>
+</section>
+
+<main class="wrap">
+  {% include "mensajes.html" %}
+  <div class="explorar">
+    <!-- Filtros laterales: se envían solos al cambiar -->
+    <form class="card filtros" method="get" id="filtros">
+      <div class="buscar">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <input class="input" name="q" value="{{ busqueda }}" placeholder="Buscar por ubicación o nombre">
+      </div>
+
+      <span class="filtro-titulo">Deporte</span>
+      <div class="chips">
+        <label class="chip-op"><input type="radio" name="deporte" value="" {% if not deporte_actual %}checked{% endif %}><span>Todos</span></label>
+        {% for valor, nombre in deportes %}
+        <label class="chip-op"><input type="radio" name="deporte" value="{{ valor }}" {% if deporte_actual == valor %}checked{% endif %}><span>{{ nombre }}</span></label>
+        {% endfor %}
+      </div>
+
+      <span class="filtro-titulo">Precio máx / hora: <b class="money" id="precio-txt">{{ precio_max }}</b></span>
+      <input class="rango" type="range" name="precio_max" min="20000" max="{{ precio_tope }}" step="5000" value="{{ precio_max }}"
+             oninput="document.getElementById('precio-txt').textContent = '$ ' + Number(this.value).toLocaleString('es-CO')">
+
+      {% if servicios %}
+      <span class="filtro-titulo">Servicios</span>
+      <div class="chips">
+        {% for s in servicios %}
+        <label class="chip-op"><input type="checkbox" name="servicio" value="{{ s.id }}" {% if s.id|stringformat:"s" in servicios_sel %}checked{% endif %}><span>{{ s.nombre }}</span></label>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </form>
+
+    <div class="grid-canchas">
+      {% for cancha in canchas %}
+      <a class="card cancha-card" href="{% url 'app_escenarios:escenario_detalle' cancha.pk %}">
+        <div class="foto-box">
+          {% if cancha.imagen_principal %}
+            <img class="foto" src="{{ cancha.imagen_principal }}" alt="{{ cancha.nombre }}">
+          {% else %}
+            <div class="foto ph"><svg class="ic"><use href="#i-img"/></svg></div>
+          {% endif %}
+          <span class="badge">{{ cancha.get_deporte_display }}</span>
+        </div>
+        <div class="body">
+          <h3>{{ cancha.nombre }}</h3>
+          <p class="ubic"><svg class="ic"><use href="#i-pin"/></svg> {{ cancha.ubicacion }}</p>
+          <div class="chips">{% for s in cancha.servicios.all %}<span class="pill">{{ s.nombre }}</span>{% endfor %}</div>
+          <div class="row between" style="margin-top:auto;padding-top:8px">
+            <div class="precio"><b class="money">{{ cancha.precio_hora }}</b> <span>/hora</span></div>
+            <span class="superficie">★ <span>{{ cancha.get_superficie_display }}</span></span>
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="empty" style="grid-column:1/-1">No encontramos canchas con esos filtros.</div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var filtros = document.getElementById('filtros');
+filtros.querySelectorAll('input[type=radio], input[type=checkbox], input[type=range]').forEach(function (i) {
+  i.addEventListener('change', function () { filtros.submit(); });
+});
+</script>
+{% endblock %}

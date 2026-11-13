@@ -1,0 +1,50 @@
+{% extends 'panel_base.html' %}
+{% block titulo %}Panel - Reportes{% endblock %}
+{% block panel %}
+<div class="stats">
+  <div class="card stat"><p>Ingresos totales</p><b class="money">{{ ingresos_totales }}</b></div>
+  <div class="card stat"><p>Horas vendidas</p><b>{{ horas_vendidas }}</b></div>
+  <div class="card stat"><p>Ocupación</p><b>{{ ocupacion }}%</b></div>
+</div>
+
+<div class="card card-pad" style="margin-bottom:16px">
+  <h3 class="small" style="margin-bottom:12px">Horas pico</h3>
+  <div style="height:150px"><canvas id="graficoHorasPico"></canvas></div>
+</div>
+
+<div class="card card-pad">
+  <h3 class="small" style="margin-bottom:12px">Ingresos por cancha</h3>
+  <div style="height:150px"><canvas id="graficoIngresos"></canvas></div>
+</div>
+
+{{ horas_pico|json_script:"datos-horas" }}
+{{ ingresos_por_cancha|json_script:"datos-ingresos" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+var horasPico = JSON.parse(document.getElementById('datos-horas').textContent);
+var ingresos = JSON.parse(document.getElementById('datos-ingresos').textContent);
+
+function grafico(id, etiquetas, nombre, datos, color) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{ label: nombre, data: datos, backgroundColor: color, borderRadius: 4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0, font: { size: 9 } }, grid: { color: '#f1f5f9' } },
+        x: { grid: { display: false }, ticks: { font: { size: 9 },
+             callback: function (v) { var t = this.getLabelForValue(v); return t.length > 12 ? t.slice(0, 12) + '…' : t; } } }
+      }
+    }
+  });
+}
+grafico('graficoHorasPico', horasPico.map(function (x) { return x.hora; }), 'reservas',
+        horasPico.map(function (x) { return x.reservas; }), '#10b981');
+grafico('graficoIngresos', ingresos.map(function (x) { return x.nombre; }), 'ingresos',
+        ingresos.map(function (x) { return x.ingresos; }), '#0f1f3a');
+</script>
+{% endblock %}

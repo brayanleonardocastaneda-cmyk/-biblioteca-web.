@@ -1,0 +1,24 @@
+{# Tarjeta de una reserva en "Mis reservas" #}
+<div class="card item">
+  {% if reserva.escenario.imagen_principal %}
+    <img class="foto" src="{{ reserva.escenario.imagen_principal }}" alt="">
+  {% else %}
+    <div class="ph"><svg class="ic" style="width:22px;height:22px"><use href="#i-img"/></svg></div>
+  {% endif %}
+  <div class="info">
+    <h3>{{ reserva.escenario.nombre }}</h3>
+    <p>{{ reserva.fecha|date:"D d/m/Y" }} · {{ reserva.horas|join:", " }} · <span class="money">{{ reserva.valor_total }}</span></p>
+    <span class="estado estado-{{ reserva.estado }}">{{ reserva.get_estado_display }}</span>
+    <span class="muted small">{{ reserva.codigo }}</span>
+  </div>
+  <div class="acciones">
+    {% if reserva.estado == 'activa' %}
+    <a class="btn btn-line" style="padding:6px 10px;font-size:12px" href="{% url 'app_tickets:generar_ticket' reserva.pk %}"><svg class="ic"><use href="#i-scan"/></svg> Ver QR</a>
+    {% endif %}
+    {% if reserva.puede_cancelarse %}
+    <form method="post" action="{% url 'app_reservas:reserva_cancelar' reserva.pk %}" onsubmit="return confirm('¿Cancelar la reserva {{ reserva.codigo }}?')">{% csrf_token %}
+      <button class="icon-btn red" type="submit" title="Cancelar reserva"><svg class="ic"><use href="#i-x"/></svg></button>
+    </form>
+    {% endif %}
+  </div>
+</div>

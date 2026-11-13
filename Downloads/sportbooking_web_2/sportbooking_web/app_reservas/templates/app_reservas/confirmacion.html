@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block titulo %}Reserva confirmada{% endblock %}
+{% block content %}
+<div class="card centro">
+  <div class="kicker">¡Listo!</div>
+  <h1 style="font-size:24px;margin:6px 0">Reserva confirmada</h1>
+  <p class="muted small">Presenta este código QR en la entrada del escenario.</p>
+  {% include "app_tickets/_ticket.html" %}
+  <p class="muted" style="font-size:11px;margin-top:12px">{{ comprobante }}</p>
+  <div class="row" style="justify-content:center;margin-top:20px">
+    <a class="btn btn-line" href="{% url 'app_escenarios:catalogo' %}">Seguir explorando</a>
+    <a class="btn btn-green" href="{% url 'app_reservas:mis_reservas' %}">Mis reservas</a>
+  </div>
+</div>
+{% endblock %}

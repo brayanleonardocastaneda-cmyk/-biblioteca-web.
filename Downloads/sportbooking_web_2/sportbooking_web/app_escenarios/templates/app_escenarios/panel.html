@@ -1,0 +1,103 @@
+{% extends 'panel_base.html' %}
+{% block titulo %}Panel - Canchas{% endblock %}
+{% block panel %}
+<div class="panel-head">
+  <h2>Escenarios</h2>
+  <a class="btn btn-green" href="{% url 'app_escenarios:cancha_crear' %}"><svg class="ic"><use href="#i-plus"/></svg> Agregar cancha</a>
+</div>
+
+<div class="lista">
+  {% for cancha in canchas %}
+  <div class="card item {% if not cancha.activo %}inactiva{% endif %}">
+    {% if cancha.imagen_principal %}
+      <img class="foto" src="{{ cancha.imagen_principal }}" alt="">
+    {% else %}
+      <div class="ph"><svg class="ic" style="width:22px;height:22px"><use href="#i-img"/></svg></div>
+    {% endif %}
+    <div class="info">
+      <h3><a href="{% url 'app_escenarios:escenario_detalle' cancha.pk %}">{{ cancha.nombre }}</a></h3>
+      <p>{{ cancha.get_deporte_display }} · {{ cancha.get_superficie_display }} · <span class="money">{{ cancha.precio_hora }}</span>/h</p>
+      {% if cancha.activo %}<span class="small txt-green">Activa</span>{% else %}<span class="small muted">Inactiva</span>{% endif %}
+    </div>
+    <div class="acciones">
+      <a class="icon-btn" href="{% url 'app_escenarios:editar_escenario' cancha.pk %}" title="Editar"><svg class="ic"><use href="#i-edit"/></svg></a>
+      <form method="post" action="{% url 'app_escenarios:cambiar_estado' cancha.pk %}">{% csrf_token %}
+        <button class="icon-btn" type="submit" title="{% if cancha.activo %}Desactivar{% else %}Activar{% endif %}"><svg class="ic"><use href="#i-power"/></svg></button>
+      </form>
+      <form method="post" action="{% url 'app_escenarios:eliminar_escenario' cancha.pk %}" onsubmit="return confirm('¿Eliminar {{ cancha.nombre|escapejs }}? También se borran sus reservas.')">{% csrf_token %}
+        <button class="icon-btn red" type="submit" title="Eliminar"><svg class="ic"><use href="#i-trash"/></svg></button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty">Todavía no hay canchas. Agrega la primera.</div>
+  {% endfor %}
+</div>
+
+{% if form %}
+<!-- Modal: Nueva cancha / Editar cancha -->
+<div class="modal-fondo">
+  <form class="card modal" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row between" style="margin-bottom:14px">
+      <h3>{{ titulo }}</h3>
+      <a class="icon-btn" href="{% url 'app_escenarios:panel_canchas' %}" title="Cerrar"><svg class="ic" style="width:14px"><use href="#i-x"/></svg></a>
+    </div>
+    {{ form.non_field_errors }}
+
+    <div class="field"><label class="label" for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>{{ form.nombre }}{{ form.nombre.errors }}</div>
+    <div class="form-3">
+      {% for campo in form %}{% if campo.name == 'deporte' or campo.name == 'superficie' or campo.name == 'precio_hora' %}
+      <div class="field"><label class="label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>
+      {% endif %}{% endfor %}
+    </div>
+    {% for campo in form %}{% if campo.name == 'ubicacion' or campo.name == 'descripcion' or campo.name == 'reglas' %}
+    <div class="field"><label class="label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>
+    {% endif %}{% endfor %}
+
+    <div class="field">
+      <span class="label">Servicios</span>
+      <div class="chips">
+        {% for op in form.servicios %}<label class="chip-op">{{ op.tag }}<span>{{ op.choice_label }}</span></label>{% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label">Galería de imágenes (JPG / PNG)</span>
+      <div class="galeria-form" id="galeria">
+        {% for img in cancha_editada.imagenes.all %}
+        <label class="mini" title="Marca para borrar">
+          <img src="{{ img.imagen.url }}" alt="">
+          <input type="checkbox" name="borrar_imagen" value="{{ img.pk }}"><span>borrar</span>
+        </label>
+        {% endfor %}
+        <label class="subir" title="Subir fotos">
+          <svg class="ic"><use href="#i-up"/></svg>
+          <input type="file" name="imagenes" accept="image/jpeg,image/png" multiple id="imagenes">
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-green btn-block" type="submit">Guardar cancha</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Vista previa de las fotos elegidas en el modal
+var subir = document.getElementById('imagenes');
+if (subir) {
+  subir.addEventListener('change', function () {
+    document.querySelectorAll('#galeria .nueva').forEach(function (e) { e.remove(); });
+    Array.from(subir.files).forEach(function (f) {
+      var img = document.createElement('img');
+      img.className = 'mini nueva';
+      img.src = URL.createObjectURL(f);
+      subir.parentNode.before(img);
+    });
+  });
+}
+</script>
+{% endblock %}

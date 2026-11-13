@@ -1,0 +1,18 @@
+{# Detalle de una reserva (cliente y administrador) #}
+<div class="card centro">
+  <h1 style="font-size:22px">Reserva {{ reserva.codigo }}</h1>
+  <p style="margin-top:6px"><span class="estado estado-{{ reserva.estado }}">{{ reserva.get_estado_display }}</span></p>
+  {% include "app_tickets/_ticket.html" %}
+  <div class="row" style="justify-content:center;margin-top:20px">
+    {% if user.is_staff %}
+      <a class="btn btn-line" href="{% url 'app_reservas:panel_reservas' %}">Volver</a>
+      {% if reserva.estado == 'activa' %}
+      <form method="post" action="{% url 'app_reservas:completar_reserva' reserva.pk %}">{% csrf_token %}
+        <button class="btn btn-green" type="submit">Marcar completada</button>
+      </form>
+      {% endif %}
+    {% else %}
+      <a class="btn btn-line" href="{% url 'app_reservas:mis_reservas' %}">Volver</a>
+    {% endif %}
+  </div>
+</div>

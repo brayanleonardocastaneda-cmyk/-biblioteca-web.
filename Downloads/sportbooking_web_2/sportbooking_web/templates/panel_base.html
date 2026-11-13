@@ -1,0 +1,18 @@
+{# templates/panel_base.html — marco del panel del administrador (título + pestañas) #}
+{% extends "base.html" %}
+{% block contenido %}
+{% with app=request.resolver_match.app_name %}
+<main class="wrap">
+  <div class="kicker">Administración</div>
+  <h1 style="margin-top:6px">Panel del complejo deportivo</h1>
+  <div class="panel-tabs">
+    <a href="{% url 'app_escenarios:panel_canchas' %}" class="{% if app == 'app_escenarios' %}on{% endif %}">Canchas</a>
+    <a href="{% url 'app_reservas:panel_reservas' %}" class="{% if app == 'app_reservas' %}on{% endif %}">Reservas</a>
+    <a href="{% url 'app_reportes:panel_reportes' %}" class="{% if app == 'app_reportes' %}on{% endif %}">Reportes</a>
+    <a href="{% url 'app_tickets:panel_validador' %}" class="{% if app == 'app_tickets' %}on{% endif %}">Validador QR</a>
+  </div>
+  {% include "mensajes.html" %}
+  {% block panel %}{% endblock %}
+</main>
+{% endwith %}
+{% endblock %}

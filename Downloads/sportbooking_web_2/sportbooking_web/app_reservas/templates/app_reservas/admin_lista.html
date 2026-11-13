@@ -1,0 +1,85 @@
+{% extends 'panel_base.html' %}
+{% block titulo %}Panel - Reservas{% endblock %}
+{% block panel %}
+<form class="filtros-bar" method="get" id="filtros">
+  <input type="hidden" name="vista" value="{{ vista }}">
+  <div>
+    <label class="label-filtro" for="f-estado">Estado</label>
+    <select class="input" id="f-estado" name="estado">
+      <option value="">todas</option>
+      {% for valor, nombre in estados %}<option value="{{ valor }}" {% if filtros.estado == valor %}selected{% endif %}>{{ valor }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="label-filtro" for="f-cancha">Cancha</label>
+    <select class="input" id="f-cancha" name="escenario" style="min-width:210px">
+      <option value="">Todas</option>
+      {% for c in canchas %}<option value="{{ c.pk }}" {% if filtros.escenario == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="label-filtro" for="f-fecha">Fecha</label>
+    <input class="input" type="date" id="f-fecha" name="fecha" value="{{ filtros.fecha }}">
+  </div>
+
+  <div class="row" style="margin-left:auto;align-self:flex-end;gap:6px">
+    <div class="toggle">
+      <a href="?{% for k, v in filtros.items %}{{ k }}={{ v }}&{% endfor %}vista=lista" class="{% if vista != 'calendario' %}on{% endif %}">Lista</a>
+      <a href="?{% for k, v in filtros.items %}{{ k }}={{ v }}&{% endfor %}vista=calendario" class="{% if vista == 'calendario' %}on{% endif %}">Calendario</a>
+    </div>
+    <a class="btn btn-green btn-sm" href="{% url 'app_reservas:reservas_exportar' %}?{{ query }}"><svg class="ic" style="width:13px"><use href="#i-down"/></svg> Exportar</a>
+  </div>
+</form>
+
+{% if vista == 'calendario' %}
+<div class="card card-pad">
+  <h3 class="small" style="margin-bottom:14px">Ocupación del {{ dia|date:"Y-m-d" }}</h3>
+  {% for fila in ocupacion %}
+  <div class="ocup-fila">
+    <span class="ocup-cancha">{{ fila.cancha.nombre }}</span>
+    <div class="ocup-bloques">
+      {% for b in fila.bloques %}
+        {% if b.reserva %}
+        <a class="ocup-bloque ocupado" href="{% url 'app_reservas:detalle_reserva' b.reserva.pk %}" title="{{ b.reserva.cliente.nombre_completo }} · {{ b.reserva.get_estado_display }}">{{ b.hora }}</a>
+        {% else %}
+        <span class="ocup-bloque">{{ b.hora }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="lista">
+  {% for reserva in reservas %}
+  <div class="card item" style="padding:14px 16px">
+    <div class="info">
+      <h3>{{ reserva.escenario.nombre }}</h3>
+      <p>{{ reserva.fecha|date:"Y-m-d" }} · {{ reserva.horas|join:", " }} · {{ reserva.cliente.nombre_completo }}</p>
+    </div>
+    <div class="acciones" style="gap:10px">
+      <b class="money txt-green small">{{ reserva.valor_total }}</b>
+      <span class="estado">{{ reserva.get_estado_display }}</span>
+      <a class="icon-btn" href="{% url 'app_reservas:detalle_reserva' reserva.pk %}" title="Ver detalle"><svg class="ic" style="width:14px"><use href="#i-eye"/></svg></a>
+      {% if reserva.estado == 'activa' %}
+      <form method="post" action="{% url 'app_reservas:completar_reserva' reserva.pk %}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="btn btn-line btn-sm" type="submit">Completar</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty">No hay reservas con esos filtros.</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('#filtros select, #filtros input').forEach(function (i) {
+  i.addEventListener('change', function () { document.getElementById('filtros').submit(); });
+});
+</script>
+{% endblock %}

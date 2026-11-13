@@ -1,0 +1,4 @@
+{% extends user.is_staff|yesno:'panel_base.html,base.html' %}
+{% block titulo %}Reserva {{ reserva.codigo }}{% endblock %}
+{% block panel %}{% include "app_reservas/_detalle.html" %}{% endblock %}
+{% block content %}{% include "app_reservas/_detalle.html" %}{% endblock %}

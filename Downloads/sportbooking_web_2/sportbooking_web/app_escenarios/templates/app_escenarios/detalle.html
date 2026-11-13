@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ cancha.nombre }}{% endblock %}
+{% block content %}
+<a href="{% url 'app_escenarios:catalogo' %}" class="row muted small" style="gap:4px;margin-bottom:14px">
+  <svg class="ic" style="width:14px"><use href="#i-back"/></svg> Volver
+</a>
+
+<div class="detalle">
+  <!-- Columna izquierda: fotos e información -->
+  <div>
+    <div class="galeria">
+      {% with imagenes=cancha.imagenes.all %}
+      {% if imagenes %}
+        <img class="principal" id="foto" src="{{ imagenes.0.imagen.url }}" alt="{{ cancha.nombre }}">
+        {% if imagenes|length > 1 %}
+        <button class="flecha izq" type="button" onclick="mover(-1)"><svg class="ic"><use href="#i-l"/></svg></button>
+        <button class="flecha der" type="button" onclick="mover(1)"><svg class="ic"><use href="#i-r"/></svg></button>
+        {% endif %}
+      {% else %}
+        <div class="ph"><svg class="ic"><use href="#i-img"/></svg></div>
+      {% endif %}
+    </div>
+    {% if imagenes|length > 1 %}
+    <div class="miniaturas">
+      {% for img in imagenes %}
+      <img src="{{ img.imagen.url }}" alt="" class="{% if forloop.first %}on{% endif %}" onclick="ver({{ forloop.counter0 }})">
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div style="margin-top:22px"><span class="tag">{{ cancha.get_deporte_display }} · {{ cancha.get_superficie_display }}</span></div>
+    <h1 style="margin:8px 0 4px">{{ cancha.nombre }}</h1>
+    <p class="muted row" style="gap:4px"><svg class="ic" style="width:14px"><use href="#i-pin"/></svg> {{ cancha.ubicacion }}</p>
+    {% if cancha.descripcion %}<p style="margin-top:14px">{{ cancha.descripcion|linebreaksbr }}</p>{% endif %}
+
+    {% if cancha.reglas %}
+    <div class="reglas"><b>Reglas del escenario</b>{{ cancha.reglas }}</div>
+    {% endif %}
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px">
+      {% for s in cancha.servicios.all %}<span class="chip">{{ s.nombre }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <!-- Columna derecha: tarjeta de reserva -->
+  <div class="card reserva-box">
+    <div class="precio" style="font-size:20px"><span class="money" style="font-size:20px;color:var(--ink);font-weight:800">{{ cancha.precio_hora }}</span> <span>/hora</span></div>
+
+    <form method="get" style="margin-top:14px">
+      <label class="label-up" for="fecha">Fecha</label>
+      <input class="input" type="date" id="fecha" name="fecha" value="{{ fecha|date:'Y-m-d' }}" min="{{ hoy|date:'Y-m-d' }}" onchange="this.form.submit()">
+    </form>
+
+    <form method="post" action="{% url 'app_reservas:reservar' cancha.pk %}" style="margin-top:14px">
+      {% csrf_token %}
+      <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+      <span class="label-up">Bloques disponibles</span>
+      <div class="bloques">
+        {% for h in horarios %}
+        <label class="bloque">
+          <input type="checkbox" name="bloques" value="{{ h.hora }}" {% if not h.disponible %}disabled{% endif %}>
+          <span>{{ h.hora }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <p class="muted" style="font-size:10px;margin-top:8px">Los horarios en gris ya están ocupados.</p>
+      <div class="total"><span class="muted"><b id="n-horas">0</b> hora(s)</span><b id="total">$ 0</b></div>
+      {% if user.is_authenticated %}
+        <button class="btn btn-green btn-block" id="btn-reservar" type="submit" disabled>Reservar ahora</button>
+      {% else %}
+        <a class="btn btn-green btn-block" href="{% url 'app_usuarios:login' %}?next={{ request.path }}">Inicia sesión para reservar</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Reseñas -->
+<h2 class="row" style="margin-top:34px;gap:8px"><svg class="ic txt-green" style="width:18px;height:18px"><use href="#i-msg"/></svg> Reseñas y calificaciones</h2>
+<div class="resenas">
+  <div class="card card-pad">
+    <div class="row" style="gap:12px">
+      <span class="nota">{{ promedio|floatformat:"1u" }}</span>
+      <div>
+        <div class="estrellas {% if not promedio %}gris{% endif %}">{% for i in "12345" %}{% if forloop.counter <= promedio|floatformat:0|add:0 %}★{% else %}<span style="color:#cbd5e1">★</span>{% endif %}{% endfor %}</div>
+        <div class="muted" style="font-size:10px">{{ resenas|length }} reseña(s)</div>
+      </div>
+    </div>
+    {% for r in resumen %}
+    <div class="barra"><span>{{ r.estrellas }}</span><div><i style="width:{{ r.porcentaje }}%"></i></div><span>{{ r.cantidad }}</span></div>
+    {% endfor %}
+  </div>
+
+  <div class="stack">
+    <div class="card card-pad">
+      <b class="small">Califica esta cancha</b>
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'app_escenarios:publicar_resena' cancha.pk %}">
+        {% csrf_token %}
+        <div class="calificar">
+          {% for n in "54321" %}
+          <input type="radio" name="calificacion" id="e{{ n }}" value="{{ n }}" {% if mi_resena.calificacion|stringformat:"s" == n %}checked{% endif %}>
+          <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
+          {% endfor %}
+        </div>
+        <textarea class="input" name="comentario" rows="3" placeholder="Cuéntale a otros deportistas tu experiencia...">{{ mi_resena.comentario|default:'' }}</textarea>
+        <button class="btn btn-green" style="margin-top:10px" type="submit">{% if mi_resena %}Actualizar reseña{% else %}Publicar reseña{% endif %}</button>
+      </form>
+      {% else %}
+      <p class="muted small" style="margin-top:8px"><a class="txt-green" href="{% url 'app_usuarios:login' %}?next={{ request.path }}"><b>Inicia sesión</b></a> para calificar.</p>
+      {% endif %}
+    </div>
+
+    {% for r in resenas %}
+    <div class="card resena">
+      <div class="row between"><b class="small">{{ r.usuario.nombre_completo }}</b><span class="muted" style="font-size:11px">{{ r.creada|date:"d/m/Y" }}</span></div>
+      <div class="estrellas small">{{ r.estrellas }}</div>
+      {% if r.comentario %}<p class="small" style="margin-top:4px">{{ r.comentario }}</p>{% endif %}
+    </div>
+    {% empty %}
+    <div class="empty">Aún no hay reseñas. ¡Sé el primero en calificar!</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Galería de fotos
+var fotos = [{% for img in cancha.imagenes.all %}"{{ img.imagen.url }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+var actual = 0;
+function ver(i) {
+  actual = (i + fotos.length) % fotos.length;
+  document.getElementById('foto').src = fotos[actual];
+  document.querySelectorAll('.miniaturas img').forEach(function (m, j) { m.classList.toggle('on', j === actual); });
+}
+function mover(paso) { ver(actual + paso); }
+
+// Total de la reserva según los bloques elegidos
+var precio = {{ cancha.precio_hora }};
+document.querySelectorAll('.bloque input').forEach(function (c) {
+  c.addEventListener('change', function () {
+    var n = document.querySelectorAll('.bloque input:checked').length;
+    document.getElementById('n-horas').textContent = n;
+    document.getElementById('total').textContent = '$ ' + (n * precio).toLocaleString('es-CO');
+    var btn = document.getElementById('btn-reservar');
+    if (btn) btn.disabled = n === 0;
+  });
+});
+</script>
+{% endblock %}

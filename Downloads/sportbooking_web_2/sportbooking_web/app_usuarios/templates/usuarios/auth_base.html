@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{# Marco de login, registro y recuperar contraseña: página blanca sin barra de navegación #}
+{% block nav %}{% endblock %}
+{% block contenido %}
+<main class="auth">
+  <div class="auth-icono"><svg class="ic"><use href="#{% block icono %}i-in{% endblock %}"/></svg></div>
+  <h1>{% block encabezado %}{% endblock %}</h1>
+  <p class="auth-sub">{% block subtitulo %}{% endblock %}</p>
+  <div class="auth-caja">
+    {% include "mensajes.html" %}
+    {% block formulario %}{% endblock %}
+  </div>
+  <p class="auth-pie">{% block pie %}{% endblock %}</p>
+</main>
+{% endblock %}

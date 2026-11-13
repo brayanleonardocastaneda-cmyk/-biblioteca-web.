@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block titulo %}Mis reservas{% endblock %}
+{% block content %}
+<div class="kicker">Tu cuenta</div>
+<h1 style="margin:6px 0 22px">Mis reservas</h1>
+
+<h2 style="margin-bottom:12px">Próximas</h2>
+<div class="lista">
+  {% for reserva in proximas %}
+  {% include "app_reservas/_tarjeta.html" %}
+  {% empty %}
+  <div class="empty">No tienes reservas próximas. <a class="txt-green" href="{% url 'app_escenarios:catalogo' %}"><b>Explora canchas</b></a></div>
+  {% endfor %}
+</div>
+
+{% if historial %}
+<h2 style="margin:28px 0 12px">Historial</h2>
+<div class="lista">
+  {% for reserva in historial %}
+  {% include "app_reservas/_tarjeta.html" %}
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

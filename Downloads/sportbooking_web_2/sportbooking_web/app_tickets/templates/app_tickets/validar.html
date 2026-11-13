@@ -1,0 +1,43 @@
+{% extends 'panel_base.html' %}
+{% block titulo %}Panel - Validador QR{% endblock %}
+{% block panel %}
+<div class="card validador">
+  <svg class="ic txt-green" style="width:26px;height:26px"><use href="#i-scan"/></svg>
+  <h3 style="margin-top:8px">Validador de acceso QR</h3>
+  <p class="muted" style="font-size:11px">Escanea o ingresa el código del comprobante.</p>
+
+  <form id="form-qr" method="post" class="row" style="margin-top:14px;gap:6px">
+    {% csrf_token %}
+    <input class="input" type="text" name="codigo" id="codigo" placeholder="SB-XXXXXXX" required autofocus autocomplete="off" style="text-transform:uppercase">
+    <button class="btn btn-green btn-sm" type="submit">Validar</button>
+  </form>
+
+  <div id="resultado" class="resultado"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Envía el código al servidor sin recargar la página y muestra el resultado.
+function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+document.getElementById('form-qr').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var caja = document.getElementById('resultado');
+  fetch('', { method: 'POST', body: new FormData(this) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      caja.className = 'resultado ' + (d.valido ? 'ok' : 'mal');
+      var html = '<b>' + (d.valido ? '✔ ' : '✖ ') + esc(d.mensaje) + '</b>';
+      if (d.codigo) {
+        html += '<div class="datos">' +
+          '<div><span class="muted">Código</span><b>' + esc(d.codigo) + '</b></div>' +
+          '<div><span class="muted">Cancha</span><span>' + esc(d.escenario) + '</span></div>' +
+          '<div><span class="muted">Cliente</span><span>' + esc(d.cliente) + '</span></div>' +
+          '<div><span class="muted">Fecha</span><span>' + esc(d.fecha + ' · ' + d.horas) + '</span></div></div>';
+      }
+      caja.innerHTML = html;
+      document.getElementById('codigo').value = '';
+    });
+});
+</script>
+{% endblock %}

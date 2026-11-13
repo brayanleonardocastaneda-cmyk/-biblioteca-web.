@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+media/
+desktop.ini
+
+# Variables y claves privadas
+.env
+.env.*
+
+# Base de datos local
+*.sqlite3
+
+# Archivos temporales
+*.log
+.DS_Store

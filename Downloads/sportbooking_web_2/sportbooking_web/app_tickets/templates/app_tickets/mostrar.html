@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block titulo %}Ticket {{ ticket.codigoQR }}{% endblock %}
+{% block content %}
+<div class="card centro">
+  <div class="kicker">Tu ticket de acceso</div>
+  <p class="muted small" style="margin-top:6px">Muestra este QR en la entrada del escenario.</p>
+  {% include "app_tickets/_ticket.html" %}
+  <div class="row no-print" style="justify-content:center;margin-top:20px">
+    <a class="btn btn-line" href="{% url 'app_reservas:mis_reservas' %}">Volver</a>
+    <button class="btn btn-green" type="button" onclick="window.print()"><svg class="ic"><use href="#i-down"/></svg> Descargar</button>
+  </div>
+</div>
+{% endblock %}

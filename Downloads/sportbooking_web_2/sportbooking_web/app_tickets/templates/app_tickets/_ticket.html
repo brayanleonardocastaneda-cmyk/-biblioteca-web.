@@ -1,0 +1,12 @@
+{# Código QR y datos de la reserva. Necesita "ticket" y "reserva" en el contexto. #}
+<img class="qr" src="data:image/png;base64,{{ ticket.imagen_qr }}" alt="Código QR {{ ticket.codigoQR }}">
+<div style="font-size:18px;font-weight:800;letter-spacing:.08em">{{ ticket.codigoQR }}</div>
+{% if ticket.estadoValidado %}<p class="small muted">Este ticket ya fue usado en la entrada.</p>{% endif %}
+<div class="datos">
+  <div><span class="muted">Cancha</span><b>{{ reserva.escenario.nombre }}</b></div>
+  <div><span class="muted">Ubicación</span><span>{{ reserva.escenario.ubicacion }}</span></div>
+  <div><span class="muted">Fecha</span><span>{{ reserva.fecha|date:"d/m/Y" }}</span></div>
+  <div><span class="muted">Horario</span><span>{{ reserva.horas|join:", " }}</span></div>
+  <div><span class="muted">Cliente</span><span>{{ reserva.cliente.nombre_completo }}</span></div>
+  <div><span class="muted">Total</span><b class="money">{{ reserva.valor_total }}</b></div>
+</div>
